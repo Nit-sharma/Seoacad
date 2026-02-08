@@ -70,6 +70,7 @@ import ProfileView from './components/profile/ProfileView';
 import SeoGuideView from './components/guides/SeoGuideView';
 import DashboardWelcome from './components/dashboard/DashboardWelcome';
 import ProjectOnboarding from './components/projects/ProjectOnboarding';
+import OnboardingWizard from './components/dashboard/OnboardingWizard';
 import { downloadProjectCSV } from './utils';
 
 // ... (Rest of file) ... 
@@ -156,7 +157,8 @@ const INITIAL_USER: UserProfile = {
   preferences: {
     emailNotifications: true,
     darkMode: false
-  }
+  },
+  onboardingStep: 5 // Fully onboarded
 };
 
 const GUEST_USER: UserProfile = {
@@ -168,7 +170,8 @@ const GUEST_USER: UserProfile = {
   avatar: '',
   about: '',
   socials: { linkedin: '', twitter: '', website: '' },
-  preferences: { emailNotifications: true, darkMode: false }
+  preferences: { emailNotifications: true, darkMode: false },
+  onboardingStep: 1 // Start onboarding
 };
 
 const MARKETING_GUIDE = [
@@ -1033,6 +1036,53 @@ const App: React.FC = () => {
     </button>
   );
 
+  const handleOnboardingUpdateProfile = (data: Partial<UserProfile>) => {
+    if (!user) return;
+    setUser({ ...user, ...data, onboardingStep: 2 });
+  };
+
+  const handleOnboardingCreateProject = (name: string, domain: string) => {
+    if (!user) return;
+    // Create Project Logic reused/adapted
+    const initialPillars = JSON.parse(JSON.stringify(INITIAL_PROJECTS[0].pillars));
+    initialPillars.forEach((pillar: any) => {
+      pillar.categories.forEach((cat: any) => {
+        cat.tasks.forEach((task: any) => { task.completed = false; });
+      });
+    });
+
+    const newProject: SEOProject = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: name,
+      domain: domain,
+      logo: `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+      lastAuditDate: new Date().toISOString().split('T')[0],
+      score: 0,
+      pillars: initialPillars,
+      basicDetails: { ...INITIAL_PROJECTS[0].basicDetails, companyName: name, website: domain } // Simplified for brevity
+    };
+    setProjects([...projects, newProject]);
+    setUser({ ...user, onboardingStep: 3 });
+  };
+
+  const handleOnboardingCreateTask = (text: string) => {
+    if (!user) return;
+    const newItem: TodoItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      text: text,
+      date: new Date().toISOString().split('T')[0],
+      completed: false
+    };
+    setTodos([...todos, newItem]);
+    setUser({ ...user, onboardingStep: 4 });
+  };
+
+  const handleOnboardingReadGuide = () => {
+    if (!user) return;
+    setUser({ ...user, onboardingStep: 5 });
+    setView('DASHBOARD');
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
       {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-20 md:hidden" onClick={() => setIsSidebarOpen(false)} />}
@@ -1048,8 +1098,8 @@ const App: React.FC = () => {
           <div className="space-y-6">
             <div>
               <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Dashboard</p>
-              {/* Projects triggers checkAuth to lock it for guests, but if user is Guest, they stay on Landing. If logged in, they go to Dashboard */}
-              <SidebarItem icon={LayoutDashboard} label="Projects" active={view === 'DASHBOARD' || view === 'PROJECT_DETAIL'} onClick={() => checkAuth(() => { setView('DASHBOARD'); setActiveProjectId(null); setIsSidebarOpen(false); })} />
+              <SidebarItem icon={LayoutDashboard} label="Dashboard" active={view === 'DASHBOARD'} onClick={() => checkAuth(() => { setView('DASHBOARD'); setActiveProjectId(null); setIsSidebarOpen(false); })} />
+              <SidebarItem icon={Briefcase} label="Projects" active={view === 'PROJECTS' || view === 'PROJECT_DETAIL'} onClick={() => checkAuth(() => { setView('PROJECTS'); setActiveProjectId(null); setIsSidebarOpen(false); })} />
               <SidebarItem icon={CheckSquare} label="Tasks" active={view === 'TODO'} onClick={() => checkAuth(() => { setView('TODO'); setIsSidebarOpen(false); })} badge={todos.filter(t => !t.completed && t.date <= new Date().toISOString().split('T')[0]).length || undefined} />
               <SidebarItem icon={BookOpen} label="Guide" active={view === 'SEO_GUIDE'} onClick={() => { setView('SEO_GUIDE'); setIsSidebarOpen(false); }} />
               <SidebarItem icon={Wrench} label="Tools" active={view === 'TOOLS'} onClick={() => { setView('TOOLS'); setIsSidebarOpen(false); }} />
@@ -1096,92 +1146,56 @@ const App: React.FC = () => {
           {/* Landing View (Guest) */}
           {view === 'LANDING' && <LandingView onSignUp={() => setIsLoginModalOpen(true)} />}
 
-          {/* Onboarding View (Logged In, No Projects) */}
-          {view === 'DASHBOARD' && projects.length === 0 && user && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-              <div className="lg:col-span-2 space-y-8">
-                {/* Welcome Banner */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
-                  <div className="relative z-10 max-w-lg">
-                    <h1 className="text-3xl font-bold mb-2">Welcome to SEO Academy!</h1>
-                    <p className="text-blue-100 mb-6 text-lg">You're on your way to mastering SEO. Start by creating your first project to audit a website.</p>
-                    <button
-                      onClick={() => setIsProjectModalOpen(true)}
-                      className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-50 transition-colors shadow-md"
-                    >
-                      <Plus size={20} /> Create First Project
-                    </button>
-                  </div>
-                  <div className="absolute right-0 bottom-0 opacity-20 transform translate-x-12 translate-y-12">
-                    <Rocket size={200} />
+          {/* Onboarding Wizard (Logged In, Incomplete Onboarding) */}
+          {user && (user.onboardingStep || 0) < 5 && view !== 'LANDING' && (
+            <OnboardingWizard
+              user={user}
+              currentStep={user.onboardingStep || 1}
+              onUpdateProfile={handleOnboardingUpdateProfile}
+              onCreateProject={handleOnboardingCreateProject}
+              onCreateTask={handleOnboardingCreateTask}
+              onReadGuide={handleOnboardingReadGuide}
+            />
+          )}
+
+          {/* Active Dashboard (Logged In, Fully Onboarded) */}
+          {view === 'DASHBOARD' && user && (user.onboardingStep || 0) >= 5 && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden mb-8">
+                <div className="relative z-10 max-w-lg">
+                  <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name.split(' ')[0]}!</h1>
+                  <p className="text-blue-100 mb-6 text-lg">Here is what's happening with your projects today.</p>
+                  <div className="flex gap-4">
+                    <button onClick={() => setView('PROJECTS')} className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 transition-colors">View Projects</button>
+                    <button onClick={() => setView('TODO')} className="bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-800 transition-colors">My Tasks</button>
                   </div>
                 </div>
-
-                {/* Empty Projects State */}
-                <div>
-                  <h2 className="text-xl font-bold text-slate-800 mb-4">Your Projects</h2>
-                  <div className="border-2 border-dashed border-blue-200 bg-blue-50/50 rounded-2xl p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
-                    <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
-                      <Plus size={32} />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">No projects yet</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto">Create your first project to start analyzing websites and tracking SEO progress.</p>
-                  </div>
+                <div className="absolute right-0 bottom-0 opacity-20 transform translate-x-12 translate-y-12">
+                  <Rocket size={180} />
                 </div>
               </div>
 
-              <div className="space-y-8">
-                {/* Profile Card */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-slate-800 text-lg">Your Profile</h3>
-                    <button onClick={() => setView('SETTINGS')} className="text-slate-400 hover:text-slate-600"><Pencil size={18} /></button>
-                  </div>
-
-                  <div className="relative w-24 h-24 mx-auto mb-4">
-                    <div className="absolute inset-0 rounded-full border-4 border-blue-100 border-t-blue-600 rotate-45"></div>
-                    <div className="w-full h-full rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold border-4 border-white shadow-lg">
-                      {user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                    </div>
-                  </div>
-
-                  <h2 className="text-xl font-bold text-slate-800 mb-1">Good Morning, {user.name.split(' ')[0]}</h2>
-                  <p className="text-xs text-slate-400 mb-6">Complete profile to unlock features</p>
-
-                  <button onClick={() => setView('SETTINGS')} className="bg-slate-900 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-slate-800 transition-colors mb-6">
-                    Complete Profile
-                  </button>
-
-                  <div className="flex justify-center gap-4 border-t border-slate-100 pt-6">
-                    <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"><Bell size={18} /></button>
-                    <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"><Mail size={18} /></button>
-                    <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"><User size={18} /></button>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                  <h3 className="text-slate-500 text-sm font-bold uppercase mb-2">Total Projects</h3>
+                  <p className="text-3xl font-bold text-slate-800">{projects.length}</p>
                 </div>
-
-                {/* Tasks Widget */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-slate-800 text-lg">Your Tasks</h3>
-                    <button onClick={() => setView('TODO')} className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"><Plus size={16} /></button>
-                  </div>
-                  <div className="space-y-3">
-                    {todos.slice(0, 3).map(todo => (
-                      <div key={todo.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-100">
-                        <div className={`w-5 h-5 rounded-md border-2 ${todo.completed ? 'bg-green-500 border-green-500' : 'border-slate-300'} flex items-center justify-center flex-shrink-0`}>
-                          {todo.completed && <Check size={12} className="text-white" />}
-                        </div>
-                        <span className={`text-sm font-medium ${todo.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{todo.text}</span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                  <h3 className="text-slate-500 text-sm font-bold uppercase mb-2">Avg SEO Score</h3>
+                  <p className="text-3xl font-bold text-slate-800">
+                    {Math.round(projects.reduce((acc, p) => acc + p.score, 0) / projects.length || 0)}%
+                  </p>
+                </div>
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                  <h3 className="text-slate-500 text-sm font-bold uppercase mb-2">Pending Tasks</h3>
+                  <p className="text-3xl font-bold text-slate-800">{todos.filter(t => !t.completed).length}</p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Active Dashboard (Logged In, Has Projects) */}
-          {view === 'DASHBOARD' && projects.length > 0 && (
+          {/* Projects List View */}
+          {view === 'PROJECTS' && user && (user.onboardingStep || 0) >= 5 && (
             <div className="space-y-6 animate-fade-in">
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-slate-800">Projects Dashboard</h1>

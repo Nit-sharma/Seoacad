@@ -129,6 +129,7 @@ export interface UserProfile {
     emailNotifications: boolean;
     darkMode: boolean;
   };
+  onboardingStep?: number; // 1: Profile, 2: Project, 3: Task, 4: Guide, 5: Completed
 }
 
 export interface TodoItem {
@@ -167,4 +168,4 @@ export interface JobListing {
   status?: 'New' | 'Featured' | 'Urgent';
 }
 
-export type ViewState = 'DASHBOARD' | 'PROJECT_DETAIL' | 'SETTINGS' | 'TODO' | 'TOOLS' | 'EXTENSIONS' | 'JOBS' | 'GUIDE' | 'SEO_GUIDE' | 'ABOUT' | 'CONTACT' | 'TERMS';
+export type ViewState = 'DASHBOARD' | 'PROJECTS' | 'PROJECT_DETAIL' | 'SETTINGS' | 'TODO' | 'TOOLS' | 'EXTENSIONS' | 'JOBS' | 'GUIDE' | 'SEO_GUIDE' | 'ABOUT' | 'CONTACT' | 'TERMS';
