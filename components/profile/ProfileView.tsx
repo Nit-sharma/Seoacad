@@ -3,7 +3,7 @@ import {
     Mail, Phone, MapPin, Linkedin, Twitter, Globe, Edit2, Shield, Bell, Moon,
     Share2, Save, Plus, Trash2, Award, Briefcase, ExternalLink, Github, Instagram
 } from 'lucide-react';
-import { UserProfile } from '../types';
+import { UserProfile } from '../../types';
 
 interface ProfileViewProps {
     user: UserProfile;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Category, Task } from '../types';
+import { Category, Task } from '../../types';
 import { ChevronDown, ChevronUp, CheckCircle2, Circle, AlertCircle, ExternalLink } from 'lucide-react';
 
 interface ChecklistSectionProps {

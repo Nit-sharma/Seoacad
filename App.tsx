@@ -61,15 +61,15 @@ import {
 } from 'lucide-react';
 import { SEOProject, UserProfile, TodoItem, ViewState } from './types';
 import { INITIAL_PROJECTS, INITIAL_TODOS, ONBOARDING_TODOS, SEO_TOOLS_CATEGORIES, SEO_EXTENSIONS_LIST } from './constants';
-import ChecklistSection from './components/ChecklistSection';
-import RadialProgress from './components/RadialProgress';
-import LoginView from './components/LoginView';
-import JobsView from './components/JobsView';
-import GuideView from './components/GuideView';
-import ProfileView from './components/ProfileView';
-import SeoGuideView from './components/SeoGuideView';
-import DashboardWelcome from './components/DashboardWelcome';
-import ProjectOnboarding from './components/ProjectOnboarding';
+import ChecklistSection from './components/common/ChecklistSection';
+import RadialProgress from './components/common/RadialProgress';
+import LoginView from './components/auth/LoginView';
+import JobsView from './components/jobs/JobsView';
+import GuideView from './components/guides/GuideView';
+import ProfileView from './components/profile/ProfileView';
+import SeoGuideView from './components/guides/SeoGuideView';
+import DashboardWelcome from './components/dashboard/DashboardWelcome';
+import ProjectOnboarding from './components/projects/ProjectOnboarding';
 import { downloadProjectCSV } from './utils';
 
 // ... (Rest of file) ... 

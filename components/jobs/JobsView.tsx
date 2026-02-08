@@ -1,6 +1,6 @@
 import React from 'react';
 import { Briefcase, MapPin, Clock, DollarSign, ArrowRight, Building2 } from 'lucide-react';
-import { JobListing } from '../types';
+import { JobListing } from '../../types';
 
 interface JobsViewProps {
   onApplyClick: () => void;

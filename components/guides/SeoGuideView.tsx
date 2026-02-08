@@ -91,7 +91,7 @@ import {
     Laptop,
     Menu
 } from 'lucide-react';
-import { SEO_GUIDE_DATA, SeoGuideCategory, SeoGuideItem } from '../seoGuideData';
+import { SEO_GUIDE_DATA, SeoGuideCategory, SeoGuideItem } from '../../seoGuideData';
 
 // --- Reusing NavigationTab Style from ToolsView ---
 interface NavigationTabProps {

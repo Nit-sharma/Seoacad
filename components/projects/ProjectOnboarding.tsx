@@ -29,7 +29,7 @@ import {
     Map,
     MessageCircle
 } from 'lucide-react';
-import { SEOProject, BasicDetails } from '../types';
+import { SEOProject, BasicDetails } from '../../types';
 
 interface ProjectOnboardingProps {
     project: SEOProject;

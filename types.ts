@@ -164,6 +164,7 @@ export interface JobListing {
   salary: string;
   postedDate: string;
   logo: string;
+  status?: 'New' | 'Featured' | 'Urgent';
 }
 
 export type ViewState = 'DASHBOARD' | 'PROJECT_DETAIL' | 'SETTINGS' | 'TODO' | 'TOOLS' | 'EXTENSIONS' | 'JOBS' | 'GUIDE' | 'SEO_GUIDE' | 'ABOUT' | 'CONTACT' | 'TERMS';
