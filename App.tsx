@@ -1146,27 +1146,21 @@ const App: React.FC = () => {
           {/* Landing View (Guest) */}
           {view === 'LANDING' && <LandingView onSignUp={() => setIsLoginModalOpen(true)} />}
 
-          {/* Onboarding Wizard (Logged In, Incomplete Onboarding) */}
-          {user && (user.onboardingStep || 0) < 5 && view !== 'LANDING' && (
-            <OnboardingWizard
-              user={user}
-              currentStep={user.onboardingStep || 1}
-              onUpdateProfile={handleOnboardingUpdateProfile}
-              onCreateProject={handleOnboardingCreateProject}
-              onCreateTask={handleOnboardingCreateTask}
-              onReadGuide={handleOnboardingReadGuide}
-            />
-          )}
-
-          {/* Active Dashboard (Logged In, Fully Onboarded) */}
-          {view === 'DASHBOARD' && user && (user.onboardingStep || 0) >= 5 && (
+          {/* Dashboard View (Logged In) - Unified View for all users */}
+          {/* We show onboarding cards if items are missing, otherwise stats. */}
+          {user && view === 'DASHBOARD' && (
             <div className="space-y-6 animate-fade-in">
+              {/* Welcome Banner */}
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden mb-8">
                 <div className="relative z-10 max-w-lg">
-                  <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name.split(' ')[0]}!</h1>
-                  <p className="text-blue-100 mb-6 text-lg">Here is what's happening with your projects today.</p>
+                  <h1 className="text-3xl font-bold mb-2">Welcome{user.name ? `, ${user.name.split(' ')[0]}` : ''}!</h1>
+                  <p className="text-blue-100 mb-6 text-lg">
+                    {projects.length === 0 ? "Let's get your workspace set up." : "Here is what's happening with your projects."}
+                  </p>
                   <div className="flex gap-4">
-                    <button onClick={() => setView('PROJECTS')} className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 transition-colors">View Projects</button>
+                    <button onClick={() => setView('PROJECTS')} className="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 transition-colors">
+                      {projects.length === 0 ? 'Create Project' : 'View Projects'}
+                    </button>
                     <button onClick={() => setView('TODO')} className="bg-blue-700 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-800 transition-colors">My Tasks</button>
                   </div>
                 </div>
@@ -1175,27 +1169,157 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                  <h3 className="text-slate-500 text-sm font-bold uppercase mb-2">Total Projects</h3>
-                  <p className="text-3xl font-bold text-slate-800">{projects.length}</p>
+              {/* Dashboard Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                {/* Left Column: Projects & Stats */}
+                <div className="lg:col-span-2 space-y-8">
+                  {projects.length > 0 ? (
+                    <>
+                      {/* Stats Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                          <h3 className="text-slate-500 font-medium text-xs uppercase tracking-wide mb-1">Total Projects</h3>
+                          <p className="text-3xl font-bold text-slate-800">{projects.length}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                          <h3 className="text-slate-500 font-medium text-xs uppercase tracking-wide mb-1">Avg Score</h3>
+                          <p className="text-3xl font-bold text-slate-800">
+                            {Math.round(projects.reduce((acc, p) => acc + p.score, 0) / projects.length || 0)}%
+                          </p>
+                        </div>
+                        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                          <h3 className="text-slate-500 font-medium text-xs uppercase tracking-wide mb-1">Pending</h3>
+                          <p className="text-3xl font-bold text-slate-800">{todos.filter(t => !t.completed).length}</p>
+                        </div>
+                      </div>
+
+                      {/* Brief Project List */}
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h2 className="text-lg font-bold text-slate-800">Recent Projects</h2>
+                          <button onClick={() => setView('PROJECTS')} className="text-blue-600 text-sm font-bold hover:underline">View All</button>
+                        </div>
+                        <div className="space-y-4">
+                          {projects.slice(0, 3).map(project => (
+                            <div key={project.id} onClick={() => { setView('PROJECT_DETAIL'); setActiveProjectId(project.id); }} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md cursor-pointer flex items-center gap-4 transition-all">
+                              <img src={project.logo} className="w-10 h-10 rounded-lg bg-slate-50 object-cover border border-slate-100" />
+                              <div className="flex-1">
+                                <h4 className="font-bold text-slate-800">{project.name}</h4>
+                                <p className="text-xs text-slate-500">{project.domain}</p>
+                              </div>
+                              <div className="text-right">
+                                <span className={`font-bold ${project.score >= 80 ? 'text-green-600' : 'text-orange-500'}`}>{Math.round(project.score)}%</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* Empty Projects State - Onboarding Card */
+                    <div className="bg-white rounded-2xl border border-dashed border-blue-200 p-8 flex flex-col items-center justify-center text-center hover:bg-blue-50/30 transition-colors cursor-pointer group" onClick={() => setIsProjectModalOpen(true)}>
+                      <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <Plus size={32} />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-800 mb-2">Create Your First Project</h3>
+                      <p className="text-slate-500 max-w-sm mb-6">Start auditing and optimizing your website. It only takes 30 seconds to set up.</p>
+                      <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow-lg shadow-blue-600/20 group-hover:bg-blue-700 transition-all">
+                        Start Project
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                  <h3 className="text-slate-500 text-sm font-bold uppercase mb-2">Avg SEO Score</h3>
-                  <p className="text-3xl font-bold text-slate-800">
-                    {Math.round(projects.reduce((acc, p) => acc + p.score, 0) / projects.length || 0)}%
-                  </p>
-                </div>
-                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                  <h3 className="text-slate-500 text-sm font-bold uppercase mb-2">Pending Tasks</h3>
-                  <p className="text-3xl font-bold text-slate-800">{todos.filter(t => !t.completed).length}</p>
+
+                {/* Right Column: Profile & Todos */}
+                <div className="space-y-8">
+                  {/* Profile Card - Always Visible & Dynamic */}
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sticky top-24">
+                    {/* User Header */}
+                    <div className="flex flex-col items-center text-center animate-fade-in">
+                      <div className="flex justify-between w-full mb-4">
+                        <h3 className="font-bold text-slate-800 text-lg">Your Profile</h3>
+                        <button onClick={() => setView('SETTINGS')} className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-50 transition-colors">
+                          <Pencil size={18} />
+                        </button>
+                      </div>
+
+                      <div className="relative w-32 h-32 mb-6">
+                        {/* Circular Progress (25%) */}
+                        <svg className="w-full h-full transform -rotate-90">
+                          <circle cx="64" cy="64" r="58" stroke="#F1F5F9" strokeWidth="8" fill="transparent" />
+                          <circle
+                            cx="64" cy="64" r="58"
+                            stroke={user?.isProfileComplete ? "#22c55e" : "#8B5CF6"}
+                            strokeWidth="8"
+                            fill="transparent"
+                            strokeDasharray="364"
+                            strokeDashoffset={user?.isProfileComplete ? 0 : 364 * 0.75}
+                            strokeLinecap="round"
+                            className="transition-all duration-1000 ease-out"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className={`w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg transition-colors ${user?.isProfileComplete ? 'bg-green-500 shadow-green-500/30' : 'bg-blue-600 shadow-blue-600/30'}`}>
+                            {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'GU'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <h3 className="font-bold text-slate-800 text-xl mb-1">Good Morning, {user?.name ? user.name.split(' ')[0] : 'Guest'}</h3>
+                      <p className="text-sm text-slate-500 mb-8 font-medium">
+                        {user?.isProfileComplete ? 'All set! Ready to conquer SEO.' : 'Complete profile to unlock features'}
+                      </p>
+
+                      <button onClick={() => setView('SETTINGS')} className={`w-full text-white font-bold py-3.5 rounded-xl mb-8 hover:opacity-90 transition-all shadow-lg active:scale-95 ${user?.isProfileComplete ? 'bg-green-600 shadow-green-600/20' : 'bg-slate-900 shadow-slate-900/10'}`}>
+                        {user?.isProfileComplete ? 'Edit Profile' : 'Complete Profile'}
+                      </button>
+
+                      <div className="flex gap-4 justify-center w-full">
+                        <button className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-blue-600 transition-colors hover:border-blue-200 hover:shadow-sm"><Bell size={20} /></button>
+                        <button className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-blue-600 transition-colors hover:border-blue-200 hover:shadow-sm"><Mail size={20} /></button>
+                        <button className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-blue-600 transition-colors hover:border-blue-200 hover:shadow-sm"><User size={20} /></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tasks Widget */}
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-bold text-slate-800 text-lg">Your Tasks</h3>
+                      <button onClick={() => setView('TODO')} className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"><Plus size={16} /></button>
+                    </div>
+                    {todos.slice(0, 3).length > 0 ? (
+                      <div className="space-y-3">
+                        {todos.slice(0, 3).map(todo => (
+                          <div key={todo.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-100">
+                            <div className={`w-5 h-5 rounded-md border-2 ${todo.completed ? 'bg-green-500 border-green-500' : 'border-slate-300'} flex items-center justify-center flex-shrink-0`}>
+                              {todo.completed && <Check size={12} className="text-white" />}
+                            </div>
+                            <span className={`text-sm font-medium ${todo.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{todo.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-sm text-slate-400">No tasks yet.</p>
+                        <button onClick={() => setView('TODO')} className="text-blue-600 text-xs font-bold hover:underline mt-1">Add a Task</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
+          {/* Old Dashboard Blocks Removed/Merged above */}
+          {/* Placeholder for cleanly removing the previous split blocks */}
+          {false && (
+            <div />
+          )}
+
           {/* Projects List View */}
-          {view === 'PROJECTS' && user && (user.onboardingStep || 0) >= 5 && (
+          {view === 'PROJECTS' && user && (
             <div className="space-y-6 animate-fade-in">
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-slate-800">Projects Dashboard</h1>
