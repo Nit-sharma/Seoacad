@@ -1038,7 +1038,7 @@ const App: React.FC = () => {
 
   const handleOnboardingUpdateProfile = (data: Partial<UserProfile>) => {
     if (!user) return;
-    setUser({ ...user, ...data, onboardingStep: 2 });
+    setUser({ ...user, ...data, onboardingStep: 2, isProfileComplete: true });
   };
 
   const handleOnboardingCreateProject = (name: string, domain: string) => {
@@ -1298,7 +1298,16 @@ const App: React.FC = () => {
                             {/* Circular Progress (25%) */}
                             <svg className="w-full h-full transform -rotate-90">
                               <circle cx="64" cy="64" r="58" stroke="#F1F5F9" strokeWidth="8" fill="transparent" />
-                              <circle cx="64" cy="64" r="58" stroke="#8B5CF6" strokeWidth="8" fill="transparent" strokeDasharray="364" strokeDashoffset="273" strokeLinecap="round" />
+                              <circle
+                                cx="64" cy="64" r="58"
+                                stroke={user?.isProfileComplete ? "#22c55e" : "#8B5CF6"}
+                                strokeWidth="8"
+                                fill="transparent"
+                                strokeDasharray="364"
+                                strokeDashoffset={364 - (364 * Math.min((user?.onboardingStep || 1) * 20, 100) / 100)}
+                                strokeLinecap="round"
+                                className="transition-all duration-1000 ease-out"
+                              />
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center">
                               <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-blue-600/30">
@@ -1308,10 +1317,12 @@ const App: React.FC = () => {
                           </div>
 
                           <h3 className="font-bold text-slate-800 text-xl mb-1">Good Morning, {user?.name ? user.name.split(' ')[0] : 'Guest'}</h3>
-                          <p className="text-sm text-slate-500 mb-8 font-medium">Complete profile to unlock features</p>
+                          <p className="text-sm text-slate-500 mb-8 font-medium">
+                            {user?.isProfileComplete ? 'All set! Ready to conquer SEO.' : 'Complete profile to unlock features'}
+                          </p>
 
-                          <button onClick={() => setView('SETTINGS')} className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl mb-8 hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 active:scale-95">
-                            Complete Profile
+                          <button onClick={() => setView('SETTINGS')} className={`w-full text-white font-bold py-3.5 rounded-xl mb-8 hover:opacity-90 transition-all shadow-lg active:scale-95 ${user?.isProfileComplete ? 'bg-green-600 shadow-green-600/20' : 'bg-slate-900 shadow-slate-900/10'}`}>
+                            {user?.isProfileComplete ? 'Edit Profile' : 'Complete Profile'}
                           </button>
 
                           <div className="flex gap-4 justify-center w-full">
