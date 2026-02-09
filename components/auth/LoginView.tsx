@@ -50,7 +50,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, onSignUp, onClose, isMod
             <span className="text-3xl font-bold text-white">S</span>
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-blue-100 text-sm">Sign in to continue to SEO Academy</p>
+          <p className="text-blue-100 text-sm">Sign in to continue to Seoacad</p>
         </div>
 
         {/* Body */}
@@ -134,7 +134,7 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin, onSignUp, onClose, isMod
         <div className="fixed bottom-4 text-xs text-slate-400">
           <div className="flex items-center gap-1">
             <ShieldCheck size={12} />
-            <span>Secured by SEO Academy Identity</span>
+            <span>Secured by Seoacad Identity</span>
           </div>
         </div>
       )}

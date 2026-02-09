@@ -26,7 +26,7 @@ const DashboardWelcome: React.FC<DashboardWelcomeProps> = ({ onGetStarted }) => 
 
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">
                                 Welcome to <br />
-                                <span className="text-white">SEO Academy</span>
+                                <span className="text-white">Seoacad</span>
                             </h1>
 
                             <p className="text-lg text-blue-100 max-w-md mx-auto md:mx-0 leading-relaxed opacity-90">

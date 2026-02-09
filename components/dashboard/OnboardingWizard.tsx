@@ -235,7 +235,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
                     <div className="relative z-10">
                         <div className="mb-8">
-                            <h2 className="text-2xl font-bold mb-2">Welcome to SEO Academy</h2>
+                            <h2 className="text-2xl font-bold mb-2">Welcome to Seoacad</h2>
                             <p className="text-slate-400">Let's get your workspace ready.</p>
                         </div>
 
@@ -248,8 +248,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                                 return (
                                     <div key={step.id} className={`flex items-center gap-4 transition-all ${isActive ? 'opacity-100 translate-x-2' : isCompleted ? 'opacity-50' : 'opacity-30'}`}>
                                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 flex-shrink-0 transition-colors ${isActive ? 'border-blue-500 bg-blue-500 text-white' :
-                                                isCompleted ? 'border-green-500 bg-green-500 text-white' :
-                                                    'border-slate-600 text-slate-600'
+                                            isCompleted ? 'border-green-500 bg-green-500 text-white' :
+                                                'border-slate-600 text-slate-600'
                                             }`}>
                                             {isCompleted ? <CheckCircle2 size={20} /> : <Icon size={20} />}
                                         </div>
